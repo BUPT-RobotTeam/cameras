@@ -6,6 +6,13 @@
 #include <librealsense2/rs.hpp>
 #include "hikcam.hpp"
 
+#define CAMERAS_CHECK(state, str) \
+    do { \
+        if (!(state)) { \
+            std::cerr << (str) << std::endl; \
+            return -1; \
+        } \
+    } while (false)
 
 class cameras{
 public:
@@ -90,6 +97,10 @@ public:
         }
 
         return this->_frame;
+    }
+    void check(bool state, std::string& str) {
+        if (!state)
+            std::cerr << str << std::endl;
     }
 private:
     bool type_is_useful(std::string cam_type) {

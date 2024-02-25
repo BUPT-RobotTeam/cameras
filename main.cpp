@@ -5,17 +5,10 @@
 int main() {
     cv::Mat frame;
     cv::namedWindow("Cam", cv::WINDOW_NORMAL);
-    cameras cam("d");
+    cameras cam("h");
 
-    if (!cam.open()) {
-        std::cerr << "camera open error" << std::endl;
-        return -1;
-    }
-
-    if (!cam.start()) {
-        std::cerr << "camera start error" << std::endl;
-        return -1;
-    }
+    CAMERAS_CHECK(cam.open(), "camera open error");
+    CAMERAS_CHECK(cam.start(), "camera start error");
 
     while (true) {
         frame = cam.get_frame();
