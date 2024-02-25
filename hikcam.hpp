@@ -193,7 +193,6 @@ public:
     }
     std::vector<hikcam_info> enumerate()
     {
-
         MV_CC_DEVICE_INFO_LIST stDeviceList;
         memset(&stDeviceList, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
 

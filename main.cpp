@@ -5,7 +5,7 @@
 int main() {
     cv::Mat frame;
     cv::namedWindow("Cam", cv::WINDOW_NORMAL);
-    cameras cam("h");
+    cameras cam;
 
     CAMERAS_CHECK(cam.open(), "camera open error");
     CAMERAS_CHECK(cam.start(), "camera start error");
