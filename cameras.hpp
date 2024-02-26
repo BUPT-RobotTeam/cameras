@@ -86,6 +86,7 @@ public:
             return this->_cam_hik.stop();
         }
         else if (this->_cam_type == "d") {
+            this->_cam_realsense_pipe.stop();
             return true;
         }
         return false;
@@ -148,40 +149,86 @@ private:
     bool auto_detect_cam() {
         this->_cam_type = "x";
         do {
-            //------------------------------检查工业摄像头是否可用------------------------------
-            cv::VideoCapture cap(0);
-            if (cap.isOpened()) {
-                cap.release();
-                this->_cam_type = "i";
+            if (this->auto_detect_cam_industry())
                 break;
-            }
-
-            //------------------------------检查海康摄像头是否可用------------------------------
-            MV_CC_DEVICE_INFO_LIST stDeviceList;
-            memset(&stDeviceList, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
-
-            int nRet = MV_OK;
-            nRet = MV_CC_EnumDevices(MV_GIGE_DEVICE | MV_USB_DEVICE, &stDeviceList);
-            if (MV_OK != nRet)
-            {
-                printf("MV_CC_EnumDevices fail! nRet [%x]\n", nRet);
+            else if (this->auto_detect_cam_hik())
                 break;
-            }
-
-            if (stDeviceList.nDeviceNum > 0) {
-                this->_cam_type = "h";
+            else if (this->auto_detect_cam_realsense())
                 break;
-            }
-
-            //------------------------------检查深度摄像头是否可用------------------------------
-            rs2::context ctx;
-            rs2::device_list dev_list = ctx.query_devices(); 
-            if (dev_list.size() > 0) {
-                this->_cam_type = "d";
-                break;
-            }
         }while(0);
         return type_is_useful(this->_cam_type);
+    }
+
+    bool auto_detect_cam_industry() {
+        //------------------------------检查工业摄像头是否可用------------------------------
+        cv::VideoCapture cap(0);
+        if (cap.isOpened()) {
+            cap.release();
+            this->_cam_type = "i";
+            return true;
+        }
+        return false;
+    }
+
+    bool auto_detect_cam_hik() {
+        //------------------------------检查海康摄像头是否可用------------------------------
+        void* handle = NULL;
+        MV_CC_DEVICE_INFO_LIST stDeviceList;
+        memset(&stDeviceList, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
+
+        int nRet = MV_OK;
+        nRet = MV_CC_EnumDevices(MV_GIGE_DEVICE | MV_USB_DEVICE, &stDeviceList);
+        if (MV_OK != nRet)
+        {
+            printf("MV_CC_EnumDevices fail! nRet [%x]\n", nRet);
+            return false;
+        }
+
+        bool isAccessible = false;
+        if (stDeviceList.nDeviceNum > 0) {
+            do {
+                // 尝试打开摄像头
+                MV_CC_CreateHandle(&handle, stDeviceList.pDeviceInfo[0]);
+                MV_CC_OpenDevice(handle);
+
+                isAccessible = MV_CC_IsDeviceConnected(handle);
+
+                // 关闭摄像头并删除句柄
+                MV_CC_CloseDevice(handle);
+                MV_CC_DestroyHandle(handle);
+            }while(0);
+        }
+
+        if (isAccessible) {
+            this->_cam_type = "h";
+            return true;
+        }
+        return false;
+    }
+
+    bool auto_detect_cam_realsense() {
+        //------------------------------检查深度摄像头是否可用------------------------------
+        rs2::context ctx;
+        rs2::device_list dev_list = ctx.query_devices(); 
+        bool isUsed = false;
+
+        if (dev_list.size() > 0) {
+            rs2::device dev = dev_list[0];
+            try {
+                auto pipeline = rs2::pipeline(ctx);
+                pipeline.start();
+                pipeline.stop();
+                isUsed = true;
+            } catch (const rs2::error &e) {
+                isUsed = false;
+            }
+        }
+
+        if (isUsed) {
+            this->_cam_type = "d";
+            return true;
+        }
+        return false;
     }
 
     void print_cam_info(bool state) {

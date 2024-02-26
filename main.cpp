@@ -6,7 +6,6 @@ int main() {
     cv::Mat frame;
     cv::namedWindow("Cam", cv::WINDOW_NORMAL);
     cameras cam;
-
     CAMERAS_CHECK(cam.open(), "camera open error");
     CAMERAS_CHECK(cam.start(), "camera start error");
 
@@ -16,7 +15,7 @@ int main() {
             continue;
 
         cv::imshow("Cam", frame);
-        std::cout << cam.fps() << std::endl;
+        // std::cout << "fps: " << cam.fps() << std::endl;
         if (cv::waitKey(1) == 27)
             break;
     }
