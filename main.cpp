@@ -16,7 +16,7 @@ int main() {
             continue;
 
         cv::imshow("Cam", frame);
-
+        std::cout << cam.fps() << std::endl;
         if (cv::waitKey(1) == 27)
             break;
     }

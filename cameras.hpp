@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <chrono>
 #include <string>
 #include <vector>
 #include <opencv2/opencv.hpp>
@@ -18,13 +19,17 @@
 class cameras{
 public:
     //------------------------------初始化函数------------------------------
-    cameras() {                                                         
+    cameras() : _intv{0}, _last_read(std::chrono::high_resolution_clock::now()), _idx(0){                                                         
+        std::fill_n(this->_intv, sizeof(this->_intv) / sizeof(this->_intv[0]), 0x7f7f7f7f);
         cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_FATAL);                   // 设置opencv打印日志的等级, 不再打印warn信息
+        this->_cam_type = "x";
         this->auto_detect_cam();
-        this->print_cam(this->type_is_useful(this->_cam_type));
+        this->print_cam_info(this->type_is_useful(this->_cam_type));
     }
-    cameras(std::string cam_type) {
-        cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_FATAL);
+
+    cameras(std::string cam_type) : _intv{0}, _last_read(std::chrono::high_resolution_clock::now()), _idx(0){
+        std::fill_n(this->_intv, sizeof(this->_intv) / sizeof(this->_intv[0]), 0x7f7f7f7f);
+        cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_FATAL);                   // 设置opencv打印日志的等级, 不再打印warn信息
         this->_cam_type = "x";
         if (!this->type_is_useful(cam_type)) {
             std::cerr << "param: " << cam_type << " is not useful" << std::endl;
@@ -33,7 +38,7 @@ public:
         }
         else 
             this->_cam_type = cam_type;
-        this->print_cam(this->type_is_useful(this->_cam_type));
+        this->print_cam_info(this->type_is_useful(this->_cam_type));
     }
 
     //------------------------------打开摄像头------------------------------
@@ -108,7 +113,29 @@ public:
             this->_frame.release();
         }
 
+        auto endtime = std::chrono::high_resolution_clock::now();
+        auto us = std::chrono::duration_cast<std::chrono::microseconds>(endtime - this->_last_read);
+        this->_intv[this->_idx++] = us.count();
+        this->_last_read = endtime;
+        if (this->_idx == sizeof(this->_intv) / sizeof(this->_intv[0]))
+            this->_idx = 0;
         return this->_frame;
+    }
+
+    //------------------------------获取fps------------------------------
+    double fps()
+    {
+        uint64_t total = 0;
+        uint64_t size = 0;
+        for (auto x : this->_intv)
+        {
+            if (x != 0x7f7f7f7f)
+            {
+                total += x;
+                size++;
+            }
+        }
+        return 1.0e6 / (total / double(size));
     }
 
 private:
@@ -157,7 +184,7 @@ private:
         return type_is_useful(this->_cam_type);
     }
 
-    void print_cam(bool state) {
+    void print_cam_info(bool state) {
         if (state) {
             if (this->_cam_type == "i") {
                 std::cout << "Now you are using industrial camera" << std::endl;
@@ -179,5 +206,9 @@ private:
     cv::Mat _frame;                                     // 图片处理后的opencv frame
     hikcam _cam_hik;                                    // 海康摄像头
     cv::VideoCapture _cam_industry;                     // 工业摄像头
-    rs2::pipeline _cam_realsense_pipe;
+    rs2::pipeline _cam_realsense_pipe;                  // 深度摄像头的pipeline
+    uint32_t _intv[10];                                 // 以微秒为单位的间隔
+    uint32_t _idx;                                      
+    decltype(std::chrono::high_resolution_clock::now()) _last_read; 
+
 };

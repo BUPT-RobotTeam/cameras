@@ -191,6 +191,7 @@ public:
     {
         std::fill_n(intv, sizeof(intv) / sizeof(intv[0]), 0x7f7f7f7f);
     }
+
     std::vector<hikcam_info> enumerate()
     {
         MV_CC_DEVICE_INFO_LIST stDeviceList;
