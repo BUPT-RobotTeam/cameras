@@ -13,14 +13,9 @@ int main() {
         frame = cam.get_frame();
         if (frame.empty())
             continue;
-
-        cv::Scalar color(0, 0, 255);  // BGR颜色，这里是红色
-
-        cv::line(frame, cv::Point(600, 0), cv::Point(600, frame.rows - 1), color, 2);
-
-        cv::line(frame, cv::Point(0, 400), cv::Point(frame.cols - 1, 400), color, 2);
-        std::cout << "distance: " << cam.get_depth(600, 400) << std::endl;
+        cam.draw_mark(300, 300, cameras::MARK_X);
         cv::imshow("Cam", frame);
+        std::cout << "fps: " << cam.get_fps() << std::endl;
         if (cv::waitKey(1) == 27)
             break;
     }

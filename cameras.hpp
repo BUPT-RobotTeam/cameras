@@ -18,6 +18,13 @@
     } while (false)
 
 class cameras{
+
+public:
+    enum MarkType {
+        MARK_CROSS = 0x00,                      // 正十字
+        MARK_X     = 0x01,                      // "X"
+    };
+
 public:
     //------------------------------初始化函数------------------------------
     cameras() : _intv{0}, _last_read(std::chrono::high_resolution_clock::now()), _idx(0){                                                         
@@ -137,7 +144,7 @@ public:
     }
 
     //------------------------------获取fps------------------------------
-    double fps()
+    double get_fps()
     {
         uint64_t total = 0;
         uint64_t size = 0;
@@ -150,6 +157,21 @@ public:
             }
         }
         return 1.0e6 / (total / double(size));
+    }
+
+    //------------------------------画图形------------------------------
+    void draw_mark(int x, int y, MarkType mark_type = MARK_CROSS, cv::Scalar color = cv::Scalar(0, 0, 255), int line_length = 20, int line_width = 3) {
+        const int frame_widht = this->_frame.cols;
+        const int frame_height = this->_frame.rows;
+
+        if (mark_type == MARK_CROSS) {
+            cv::line(this->_frame, cv::Point(x, y - line_length), cv::Point(x, y + line_length), color, line_width);
+            cv::line(this->_frame, cv::Point(x - line_length, y), cv::Point(x + line_length, y), color, line_width);
+        }
+        else if (mark_type = MARK_X) {
+            cv::line(this->_frame, cv::Point(x - line_length, y - line_length), cv::Point(x + line_length, y + line_length), color, line_width);
+            cv::line(this->_frame, cv::Point(x + line_length, y - line_length), cv::Point(x - line_length, y + line_length), color, line_width);
+        }
     }
 
 private:
@@ -262,14 +284,18 @@ private:
     }
 
 private:
-    std::string _cam_type;                              // 摄像头的类型: h - hik摄像头; i - 工业摄像头; d - 深度摄像头
-
-    cv::Mat _frame;                                     // 图片处理后的opencv frame
-    rs2::frameset _frame_realsense;                     // 深度相机视频帧
-
+    //------------------------------摄像头类型------------------------------
     hikcam _cam_hik;                                    // 海康摄像头
     cv::VideoCapture _cam_industry;                     // 工业摄像头
     rs2::pipeline _cam_realsense_pipe;                  // 深度摄像头的pipeline
+    std::string _cam_type;                              // 摄像头的类型: h - hik摄像头; i - 工业摄像头; d - 深度摄像头
+
+    //------------------------------数据帧------------------------------
+    cv::Mat _frame;                                     // 图片处理后的opencv frame
+    rs2::frameset _frame_realsense;                     // 深度相机视频帧
+
+
+    //------------------------------计算fps------------------------------
     uint32_t _intv[10];                                 // 以微秒为单位的间隔
     uint32_t _idx;                                      
     decltype(std::chrono::high_resolution_clock::now()) _last_read; 
