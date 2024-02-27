@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <algorithm>
 #include <chrono>
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@ public:
         std::fill_n(this->_intv, sizeof(this->_intv) / sizeof(this->_intv[0]), 0x7f7f7f7f);
         cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_FATAL);                   // 设置opencv打印日志的等级, 不再打印warn信息
         this->_cam_type = "x";
+
         this->auto_detect_cam();
         this->print_cam_info(this->type_is_useful(this->_cam_type));
     }
@@ -31,6 +33,7 @@ public:
         std::fill_n(this->_intv, sizeof(this->_intv) / sizeof(this->_intv[0]), 0x7f7f7f7f);
         cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_FATAL);                   // 设置opencv打印日志的等级, 不再打印warn信息
         this->_cam_type = "x";
+
         if (!this->type_is_useful(cam_type)) {
             std::cerr << "param: " << cam_type << " is not useful" << std::endl;
             std::cerr << "automatically find available devices" << std::endl;
@@ -101,8 +104,8 @@ public:
             this->_frame = this->_cam_hik.read();
         }
         else if (this->_cam_type == "d") {
-            rs2::frameset data = this->_cam_realsense_pipe.wait_for_frames();
-            rs2::frame color_frame = data.get_color_frame();
+            this->_frame_realsense = this->_cam_realsense_pipe.wait_for_frames();
+            rs2::frame color_frame = this->_frame_realsense.get_color_frame();
 
             const int w = color_frame.as<rs2::video_frame>().get_width();
             const int h = color_frame.as<rs2::video_frame>().get_height();
@@ -121,6 +124,16 @@ public:
         if (this->_idx == sizeof(this->_intv) / sizeof(this->_intv[0]))
             this->_idx = 0;
         return this->_frame;
+    }
+
+
+    //------------------------------获取深度图像指定坐标的数据------------------------------
+    double get_depth(int x, int y) {
+        if (this->_cam_type == "d") {
+            rs2::depth_frame depth = this->_frame_realsense.get_depth_frame();
+            return depth.get_distance(std::clamp(x, 0, depth.get_width()), std::clamp(y, 0, depth.get_height()));
+        }
+        return 0.0;
     }
 
     //------------------------------获取fps------------------------------
@@ -149,28 +162,36 @@ private:
     bool auto_detect_cam() {
         this->_cam_type = "x";
         do {
-            if (this->auto_detect_cam_industry())
+            if (this->cam_is_accessible_industry()) {
+                this->_cam_type = "i";
                 break;
-            else if (this->auto_detect_cam_hik())
+            }
+            
+            else if (this->cam_is_accessible_hik()) {
+                this->_cam_type = "h";
                 break;
-            else if (this->auto_detect_cam_realsense())
+            }
+            else if (this->cam_is_accessible_realsense()) {
+                this->_cam_type = "d";
                 break;
+            }
         }while(0);
         return type_is_useful(this->_cam_type);
     }
 
-    bool auto_detect_cam_industry() {
+    bool cam_is_accessible_industry() {
         //------------------------------检查工业摄像头是否可用------------------------------
         cv::VideoCapture cap(0);
+        bool is_accessible = false;
         if (cap.isOpened()) {
+            is_accessible = true;
             cap.release();
-            this->_cam_type = "i";
-            return true;
         }
-        return false;
+
+        return is_accessible;
     }
 
-    bool auto_detect_cam_hik() {
+    bool cam_is_accessible_hik() {
         //------------------------------检查海康摄像头是否可用------------------------------
         void* handle = NULL;
         MV_CC_DEVICE_INFO_LIST stDeviceList;
@@ -184,14 +205,14 @@ private:
             return false;
         }
 
-        bool isAccessible = false;
+        bool is_accessible = false;
         if (stDeviceList.nDeviceNum > 0) {
             do {
                 // 尝试打开摄像头
                 MV_CC_CreateHandle(&handle, stDeviceList.pDeviceInfo[0]);
                 MV_CC_OpenDevice(handle);
 
-                isAccessible = MV_CC_IsDeviceConnected(handle);
+                is_accessible = MV_CC_IsDeviceConnected(handle);
 
                 // 关闭摄像头并删除句柄
                 MV_CC_CloseDevice(handle);
@@ -199,36 +220,28 @@ private:
             }while(0);
         }
 
-        if (isAccessible) {
-            this->_cam_type = "h";
-            return true;
-        }
-        return false;
+        return is_accessible;
     }
 
-    bool auto_detect_cam_realsense() {
+    bool cam_is_accessible_realsense() {
         //------------------------------检查深度摄像头是否可用------------------------------
         rs2::context ctx;
         rs2::device_list dev_list = ctx.query_devices(); 
-        bool isUsed = false;
+        bool is_accessible = false;
 
         if (dev_list.size() > 0) {
-            rs2::device dev = dev_list[0];
+            rs2::device dev = dev_list[0];                              // TODO: 修改为更加灵活的版本
             try {
                 auto pipeline = rs2::pipeline(ctx);
-                pipeline.start();
+                pipeline.start();                                       // start 失败的话就不用 stop了
                 pipeline.stop();
-                isUsed = true;
+                is_accessible = true;
             } catch (const rs2::error &e) {
-                isUsed = false;
+                is_accessible = false;
             }
         }
 
-        if (isUsed) {
-            this->_cam_type = "d";
-            return true;
-        }
-        return false;
+        return is_accessible;
     }
 
     void print_cam_info(bool state) {
@@ -250,7 +263,10 @@ private:
 
 private:
     std::string _cam_type;                              // 摄像头的类型: h - hik摄像头; i - 工业摄像头; d - 深度摄像头
+
     cv::Mat _frame;                                     // 图片处理后的opencv frame
+    rs2::frameset _frame_realsense;                     // 深度相机视频帧
+
     hikcam _cam_hik;                                    // 海康摄像头
     cv::VideoCapture _cam_industry;                     // 工业摄像头
     rs2::pipeline _cam_realsense_pipe;                  // 深度摄像头的pipeline
