@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <chrono>
 #include <string>
-#include <vector>
 #include <opencv2/opencv.hpp>
 #include <librealsense2/rs.hpp>
 #include <opencv2/core/utils/logger.hpp>
@@ -168,7 +167,7 @@ public:
             cv::line(this->_frame, cv::Point(x, y - line_length), cv::Point(x, y + line_length), color, line_width);
             cv::line(this->_frame, cv::Point(x - line_length, y), cv::Point(x + line_length, y), color, line_width);
         }
-        else if (mark_type = MARK_X) {
+        else if (mark_type == MARK_X) {
             cv::line(this->_frame, cv::Point(x - line_length, y - line_length), cv::Point(x + line_length, y + line_length), color, line_width);
             cv::line(this->_frame, cv::Point(x + line_length, y - line_length), cv::Point(x - line_length, y + line_length), color, line_width);
         }

@@ -5,6 +5,7 @@ project(Cam)
 set(CMAKE_CXX_STANDARD 20)
 set(MVCAM_COMMON_RUNENV /opt/MVS/lib)
 set(MVCAM_COMMON_PATH /opt/MVS)
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 #------------------------------包含头文件------------------------------
 find_package(OpenCV REQUIRED)
