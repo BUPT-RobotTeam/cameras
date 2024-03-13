@@ -32,8 +32,85 @@ set(MVCAM_COMMON_PATH /opt/MVS)
 函数功能: 根据state(bool)来判断是否输出str
 state: True: 输出str, 并且return -1
        False: 不做任何事
+
+使用示例:
+CAMERAS_CHECK(cam.open(), "camera open error");
+CAMERAS_CHECK(cam.start(), "camera start error");
+
 ```
 ### 类函数
+```text
+------------------------------初始化函数------------------------------
+1. 默认初始化函数 cameras()
+函数功能: 自动完成可用摄像头的探测, 初始化fps计算相关数据, 并打印你当前所正在使用的摄像头
+使用示例: cameras cam;
+
+2. 初始化函数  cameras(std::string cam_type)
+函数功能: 根据字符串 cam_type 完成对指定类型摄像头的调用, 如果 cam_type 无效, 则自动检测设备上可用的摄像头, 同时完成初始化fps计算相关的数据, 打印你当前所正在使用的摄像头
+使用示例: cameras cam("h");
+
+需要注意: 
+1. 在这两个初始化函数中都把改变了OpenCV的日志输出等级, 使他只能输出Warn级别以上(不包括Warn)的信息
+2. 目前可支持的cam_type有三个，分别是 "i"(代表工业摄像头), "h"(代表海康工业摄像头), "d"(代表d435i深度摄像头)
+
+
+------------------------------公有函数------------------------------
+1. open()
+函数功能: 完成打开摄像头的步骤
+参数    : 无
+返回值  : True - 摄像头打开成功, False - 摄像头打开失败
+使用示例: CAMERAS_CHECK(cam.open(), "camera open error");
+
+
+2. start()
+函数功能: 完成开启摄像头抓图的步骤
+参数    : 无
+返回值  : True - 摄像头开始抓图成功, False - 摄像头开始抓图失败
+使用示例: CAMERAS_CHECK(cam.start(), "camera start error");
+
+3. stop()
+函数功能: 关闭摄像头，并释放摄像头相关的资源
+参数    : 无
+返回值  : True - 摄像头关闭成功, False - 摄像头关闭失败
+使用示例: CAMERAS_CHECK(cam.stop(), "camera stop error");
+
+4. get_frame()
+函数功能: 获取一张图片
+参数    : 无
+返回值  : CV::Mat 类型的图片数据
+使用示例: frame = cam.get_frame();
+
+5. get_depth()
+函数功能: 获取指定坐标的深度数据(仅支持深度相机)
+参数    : x - x坐标
+          y - y坐标
+返回值  : 指定坐标的深度数据, 如果不是深度相机的话, 将返回0.0
+使用示例: depth = cam.get_depth(300, 300);
+
+6. get_fps()
+函数功能: 获取当前视频流的帧数
+参数    : 无
+返回值  : 当前视频流的帧数数据
+使用示例: fps = cam.get_fps();
+
+7. draw_mark()
+函数功能: 在指定的坐标绘制标记
+参数    : x - x坐标
+          y - y坐标
+          mark_type - 标记类型 (目前支持 MARK_CROSS -> "十", MARK_X -> "X"), 默认为 MARK_CROSS
+          color - 标记的颜色, 默认为(0, 0, 255)
+          line_length - 线的长度, 默认为20个像素点
+          line_width - 线的宽度, 默认为3个像素点
+
+
+
+
+需要注意: 
+1. 函数的功能总体上是按照上面所说的去写的，但是因为本质上三个摄像头使用的SDK还是不一样的，所有可能会有些出入
+
+
+
+```
 
 
 
