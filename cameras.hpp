@@ -43,7 +43,7 @@ public:
         if (!this->type_is_useful(cam_type)) {
             std::cerr << "param: " << cam_type << " is not useful" << std::endl;
             std::cerr << "automatically find available devices" << std::endl;
-            auto_detect_cam();
+            this->auto_detect_cam();
         }
         else 
             this->_cam_type = cam_type;

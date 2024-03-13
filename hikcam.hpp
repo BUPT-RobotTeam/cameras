@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 bool PrintDeviceInfo(MV_CC_DEVICE_INFO *pstMVDevInfo)
 {
