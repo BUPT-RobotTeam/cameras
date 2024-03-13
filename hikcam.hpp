@@ -7,172 +7,9 @@
 #include <vector>
 #include <algorithm>
 
-bool PrintDeviceInfo(MV_CC_DEVICE_INFO *pstMVDevInfo)
-{
-    if (NULL == pstMVDevInfo)
-    {
-        printf("The Pointer of pstMVDevInfo is NULL!\n");
-        return false;
-    }
-    if (pstMVDevInfo->nTLayerType == MV_GIGE_DEVICE)
-    {
-        int nIp1 = ((pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0xff000000) >> 24);
-        int nIp2 = ((pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0x00ff0000) >> 16);
-        int nIp3 = ((pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0x0000ff00) >> 8);
-        int nIp4 = (pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0x000000ff);
-
-        // ch:打印当前相机ip和用户自定义名字 | en:print current ip and user defined name
-        printf("Device Model Name: %s\n", pstMVDevInfo->SpecialInfo.stGigEInfo.chModelName);
-        printf("CurrentIp: %d.%d.%d.%d\n", nIp1, nIp2, nIp3, nIp4);
-        printf("UserDefinedName: %s\n\n", pstMVDevInfo->SpecialInfo.stGigEInfo.chUserDefinedName);
-    }
-    else if (pstMVDevInfo->nTLayerType == MV_USB_DEVICE)
-    {
-        printf("Device Model Name: %s\n", pstMVDevInfo->SpecialInfo.stUsb3VInfo.chModelName);
-        printf("UserDefinedName: %s\n\n", pstMVDevInfo->SpecialInfo.stUsb3VInfo.chUserDefinedName);
-    }
-    else
-    {
-        printf("Not support.\n");
-    }
-
-    return true;
-}
-
-const char *format_name(enum MvGvspPixelType type)
-{
 #define CHECK(x)   \
-    if (type == x) \
-        return #x;
-    CHECK(PixelType_Gvsp_Undefined);
-    CHECK(PixelType_Gvsp_Mono1p);
-    CHECK(PixelType_Gvsp_Mono2p);
-    CHECK(PixelType_Gvsp_Mono4p);
-    CHECK(PixelType_Gvsp_Mono8);
-    CHECK(PixelType_Gvsp_Mono8_Signed);
-    CHECK(PixelType_Gvsp_Mono10);
-    CHECK(PixelType_Gvsp_Mono10_Packed);
-    CHECK(PixelType_Gvsp_Mono12);
-    CHECK(PixelType_Gvsp_Mono12_Packed);
-    CHECK(PixelType_Gvsp_Mono14);
-    CHECK(PixelType_Gvsp_Mono16);
-    CHECK(PixelType_Gvsp_BayerGR8);
-    CHECK(PixelType_Gvsp_BayerRG8);
-    CHECK(PixelType_Gvsp_BayerGB8);
-    CHECK(PixelType_Gvsp_BayerBG8);
-    CHECK(PixelType_Gvsp_BayerGR10);
-    CHECK(PixelType_Gvsp_BayerRG10);
-    CHECK(PixelType_Gvsp_BayerGB10);
-    CHECK(PixelType_Gvsp_BayerBG10);
-    CHECK(PixelType_Gvsp_BayerGR12);
-    CHECK(PixelType_Gvsp_BayerRG12);
-    CHECK(PixelType_Gvsp_BayerGB12);
-    CHECK(PixelType_Gvsp_BayerBG12);
-    CHECK(PixelType_Gvsp_BayerGR10_Packed);
-    CHECK(PixelType_Gvsp_BayerRG10_Packed);
-    CHECK(PixelType_Gvsp_BayerGB10_Packed);
-    CHECK(PixelType_Gvsp_BayerBG10_Packed);
-    CHECK(PixelType_Gvsp_BayerGR12_Packed);
-    CHECK(PixelType_Gvsp_BayerRG12_Packed);
-    CHECK(PixelType_Gvsp_BayerGB12_Packed);
-    CHECK(PixelType_Gvsp_BayerBG12_Packed);
-    CHECK(PixelType_Gvsp_BayerGR16);
-    CHECK(PixelType_Gvsp_BayerRG16);
-    CHECK(PixelType_Gvsp_BayerGB16);
-    CHECK(PixelType_Gvsp_BayerBG16);
-    CHECK(PixelType_Gvsp_RGB8_Packed);
-    CHECK(PixelType_Gvsp_BGR8_Packed);
-    CHECK(PixelType_Gvsp_RGBA8_Packed);
-    CHECK(PixelType_Gvsp_BGRA8_Packed);
-    CHECK(PixelType_Gvsp_RGB10_Packed);
-    CHECK(PixelType_Gvsp_BGR10_Packed);
-    CHECK(PixelType_Gvsp_RGB12_Packed);
-    CHECK(PixelType_Gvsp_BGR12_Packed);
-    CHECK(PixelType_Gvsp_RGB16_Packed);
-    CHECK(PixelType_Gvsp_BGR16_Packed);
-    CHECK(PixelType_Gvsp_RGBA16_Packed);
-    CHECK(PixelType_Gvsp_BGRA16_Packed);
-    CHECK(PixelType_Gvsp_RGB10V1_Packed);
-    CHECK(PixelType_Gvsp_RGB10V2_Packed);
-    CHECK(PixelType_Gvsp_RGB12V1_Packed);
-    CHECK(PixelType_Gvsp_RGB565_Packed);
-    CHECK(PixelType_Gvsp_BGR565_Packed);
-    CHECK(PixelType_Gvsp_YUV411_Packed);
-    CHECK(PixelType_Gvsp_YUV422_Packed);
-    CHECK(PixelType_Gvsp_YUV422_YUYV_Packed);
-    CHECK(PixelType_Gvsp_YUV444_Packed);
-    CHECK(PixelType_Gvsp_YCBCR8_CBYCR);
-    CHECK(PixelType_Gvsp_YCBCR422_8);
-    CHECK(PixelType_Gvsp_YCBCR422_8_CBYCRY);
-    CHECK(PixelType_Gvsp_YCBCR411_8_CBYYCRYY);
-    CHECK(PixelType_Gvsp_YCBCR601_8_CBYCR);
-    CHECK(PixelType_Gvsp_YCBCR601_422_8);
-    CHECK(PixelType_Gvsp_YCBCR601_422_8_CBYCRY);
-    CHECK(PixelType_Gvsp_YCBCR601_411_8_CBYYCRYY);
-    CHECK(PixelType_Gvsp_YCBCR709_8_CBYCR);
-    CHECK(PixelType_Gvsp_YCBCR709_422_8);
-    CHECK(PixelType_Gvsp_YCBCR709_422_8_CBYCRY);
-    CHECK(PixelType_Gvsp_YCBCR709_411_8_CBYYCRYY);
-    CHECK(PixelType_Gvsp_RGB8_Planar);
-    CHECK(PixelType_Gvsp_RGB10_Planar);
-    CHECK(PixelType_Gvsp_RGB12_Planar);
-    CHECK(PixelType_Gvsp_RGB16_Planar);
-    CHECK(PixelType_Gvsp_Jpeg);
-    CHECK(PixelType_Gvsp_Coord3D_ABC32f);
-    CHECK(PixelType_Gvsp_Coord3D_ABC32f_Planar);
-    CHECK(PixelType_Gvsp_Coord3D_AC32f);
-    CHECK(PixelType_Gvsp_COORD3D_DEPTH_PLUS_MASK);
-    CHECK(PixelType_Gvsp_Coord3D_ABC32);
-    CHECK(PixelType_Gvsp_Coord3D_AB32f);
-    CHECK(PixelType_Gvsp_Coord3D_AB32);
-    CHECK(PixelType_Gvsp_Coord3D_AC32f_64);
-    CHECK(PixelType_Gvsp_Coord3D_AC32f_Planar);
-    CHECK(PixelType_Gvsp_Coord3D_AC32);
-    CHECK(PixelType_Gvsp_Coord3D_A32f);
-    CHECK(PixelType_Gvsp_Coord3D_A32);
-    CHECK(PixelType_Gvsp_Coord3D_C32f);
-    CHECK(PixelType_Gvsp_Coord3D_C32);
-    CHECK(PixelType_Gvsp_Coord3D_ABC16);
-    CHECK(PixelType_Gvsp_Coord3D_C16);
-    CHECK(PixelType_Gvsp_HB_Mono8);
-    CHECK(PixelType_Gvsp_HB_Mono10);
-    CHECK(PixelType_Gvsp_HB_Mono10_Packed);
-    CHECK(PixelType_Gvsp_HB_Mono12);
-    CHECK(PixelType_Gvsp_HB_Mono12_Packed);
-    CHECK(PixelType_Gvsp_HB_Mono16);
-    CHECK(PixelType_Gvsp_HB_BayerGR8);
-    CHECK(PixelType_Gvsp_HB_BayerRG8);
-    CHECK(PixelType_Gvsp_HB_BayerGB8);
-    CHECK(PixelType_Gvsp_HB_BayerBG8);
-    CHECK(PixelType_Gvsp_HB_BayerRBGG8);
-    CHECK(PixelType_Gvsp_HB_BayerGR10);
-    CHECK(PixelType_Gvsp_HB_BayerRG10);
-    CHECK(PixelType_Gvsp_HB_BayerGB10);
-    CHECK(PixelType_Gvsp_HB_BayerBG10);
-    CHECK(PixelType_Gvsp_HB_BayerGR12);
-    CHECK(PixelType_Gvsp_HB_BayerRG12);
-    CHECK(PixelType_Gvsp_HB_BayerGB12);
-    CHECK(PixelType_Gvsp_HB_BayerBG12);
-    CHECK(PixelType_Gvsp_HB_BayerGR10_Packed);
-    CHECK(PixelType_Gvsp_HB_BayerRG10_Packed);
-    CHECK(PixelType_Gvsp_HB_BayerGB10_Packed);
-    CHECK(PixelType_Gvsp_HB_BayerBG10_Packed);
-    CHECK(PixelType_Gvsp_HB_BayerGR12_Packed);
-    CHECK(PixelType_Gvsp_HB_BayerRG12_Packed);
-    CHECK(PixelType_Gvsp_HB_BayerGB12_Packed);
-    CHECK(PixelType_Gvsp_HB_BayerBG12_Packed);
-    CHECK(PixelType_Gvsp_HB_YUV422_Packed);
-    CHECK(PixelType_Gvsp_HB_YUV422_YUYV_Packed);
-    CHECK(PixelType_Gvsp_HB_RGB8_Packed);
-    CHECK(PixelType_Gvsp_HB_BGR8_Packed);
-    CHECK(PixelType_Gvsp_HB_RGBA8_Packed);
-    CHECK(PixelType_Gvsp_HB_BGRA8_Packed);
-    CHECK(PixelType_Gvsp_HB_RGB16_Packed);
-    CHECK(PixelType_Gvsp_HB_BGR16_Packed);
-    CHECK(PixelType_Gvsp_HB_RGBA16_Packed);
-    CHECK(PixelType_Gvsp_HB_BGRA16_Packed);
-    return "nothing";
-}
+        if (type == x) \
+            return #x;
 
 class hikcam_info
 {
@@ -335,6 +172,170 @@ public:
             }
         }
         return 1.0e6 / (total / double(size));
+    }
+
+    bool PrintDeviceInfo(MV_CC_DEVICE_INFO *pstMVDevInfo)
+    {
+        if (NULL == pstMVDevInfo)
+        {
+            printf("The Pointer of pstMVDevInfo is NULL!\n");
+            return false;
+        }
+        if (pstMVDevInfo->nTLayerType == MV_GIGE_DEVICE)
+        {
+            int nIp1 = ((pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0xff000000) >> 24);
+            int nIp2 = ((pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0x00ff0000) >> 16);
+            int nIp3 = ((pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0x0000ff00) >> 8);
+            int nIp4 = (pstMVDevInfo->SpecialInfo.stGigEInfo.nCurrentIp & 0x000000ff);
+
+            // ch:打印当前相机ip和用户自定义名字 | en:print current ip and user defined name
+            printf("Device Model Name: %s\n", pstMVDevInfo->SpecialInfo.stGigEInfo.chModelName);
+            printf("CurrentIp: %d.%d.%d.%d\n", nIp1, nIp2, nIp3, nIp4);
+            printf("UserDefinedName: %s\n\n", pstMVDevInfo->SpecialInfo.stGigEInfo.chUserDefinedName);
+        }
+        else if (pstMVDevInfo->nTLayerType == MV_USB_DEVICE)
+        {
+            printf("Device Model Name: %s\n", pstMVDevInfo->SpecialInfo.stUsb3VInfo.chModelName);
+            printf("UserDefinedName: %s\n\n", pstMVDevInfo->SpecialInfo.stUsb3VInfo.chUserDefinedName);
+        }
+        else
+        {
+            printf("Not support.\n");
+        }
+
+        return true;
+    }
+
+    const char *format_name(enum MvGvspPixelType type)
+    {
+        CHECK(PixelType_Gvsp_Undefined);
+        CHECK(PixelType_Gvsp_Mono1p);
+        CHECK(PixelType_Gvsp_Mono2p);
+        CHECK(PixelType_Gvsp_Mono4p);
+        CHECK(PixelType_Gvsp_Mono8);
+        CHECK(PixelType_Gvsp_Mono8_Signed);
+        CHECK(PixelType_Gvsp_Mono10);
+        CHECK(PixelType_Gvsp_Mono10_Packed);
+        CHECK(PixelType_Gvsp_Mono12);
+        CHECK(PixelType_Gvsp_Mono12_Packed);
+        CHECK(PixelType_Gvsp_Mono14);
+        CHECK(PixelType_Gvsp_Mono16);
+        CHECK(PixelType_Gvsp_BayerGR8);
+        CHECK(PixelType_Gvsp_BayerRG8);
+        CHECK(PixelType_Gvsp_BayerGB8);
+        CHECK(PixelType_Gvsp_BayerBG8);
+        CHECK(PixelType_Gvsp_BayerGR10);
+        CHECK(PixelType_Gvsp_BayerRG10);
+        CHECK(PixelType_Gvsp_BayerGB10);
+        CHECK(PixelType_Gvsp_BayerBG10);
+        CHECK(PixelType_Gvsp_BayerGR12);
+        CHECK(PixelType_Gvsp_BayerRG12);
+        CHECK(PixelType_Gvsp_BayerGB12);
+        CHECK(PixelType_Gvsp_BayerBG12);
+        CHECK(PixelType_Gvsp_BayerGR10_Packed);
+        CHECK(PixelType_Gvsp_BayerRG10_Packed);
+        CHECK(PixelType_Gvsp_BayerGB10_Packed);
+        CHECK(PixelType_Gvsp_BayerBG10_Packed);
+        CHECK(PixelType_Gvsp_BayerGR12_Packed);
+        CHECK(PixelType_Gvsp_BayerRG12_Packed);
+        CHECK(PixelType_Gvsp_BayerGB12_Packed);
+        CHECK(PixelType_Gvsp_BayerBG12_Packed);
+        CHECK(PixelType_Gvsp_BayerGR16);
+        CHECK(PixelType_Gvsp_BayerRG16);
+        CHECK(PixelType_Gvsp_BayerGB16);
+        CHECK(PixelType_Gvsp_BayerBG16);
+        CHECK(PixelType_Gvsp_RGB8_Packed);
+        CHECK(PixelType_Gvsp_BGR8_Packed);
+        CHECK(PixelType_Gvsp_RGBA8_Packed);
+        CHECK(PixelType_Gvsp_BGRA8_Packed);
+        CHECK(PixelType_Gvsp_RGB10_Packed);
+        CHECK(PixelType_Gvsp_BGR10_Packed);
+        CHECK(PixelType_Gvsp_RGB12_Packed);
+        CHECK(PixelType_Gvsp_BGR12_Packed);
+        CHECK(PixelType_Gvsp_RGB16_Packed);
+        CHECK(PixelType_Gvsp_BGR16_Packed);
+        CHECK(PixelType_Gvsp_RGBA16_Packed);
+        CHECK(PixelType_Gvsp_BGRA16_Packed);
+        CHECK(PixelType_Gvsp_RGB10V1_Packed);
+        CHECK(PixelType_Gvsp_RGB10V2_Packed);
+        CHECK(PixelType_Gvsp_RGB12V1_Packed);
+        CHECK(PixelType_Gvsp_RGB565_Packed);
+        CHECK(PixelType_Gvsp_BGR565_Packed);
+        CHECK(PixelType_Gvsp_YUV411_Packed);
+        CHECK(PixelType_Gvsp_YUV422_Packed);
+        CHECK(PixelType_Gvsp_YUV422_YUYV_Packed);
+        CHECK(PixelType_Gvsp_YUV444_Packed);
+        CHECK(PixelType_Gvsp_YCBCR8_CBYCR);
+        CHECK(PixelType_Gvsp_YCBCR422_8);
+        CHECK(PixelType_Gvsp_YCBCR422_8_CBYCRY);
+        CHECK(PixelType_Gvsp_YCBCR411_8_CBYYCRYY);
+        CHECK(PixelType_Gvsp_YCBCR601_8_CBYCR);
+        CHECK(PixelType_Gvsp_YCBCR601_422_8);
+        CHECK(PixelType_Gvsp_YCBCR601_422_8_CBYCRY);
+        CHECK(PixelType_Gvsp_YCBCR601_411_8_CBYYCRYY);
+        CHECK(PixelType_Gvsp_YCBCR709_8_CBYCR);
+        CHECK(PixelType_Gvsp_YCBCR709_422_8);
+        CHECK(PixelType_Gvsp_YCBCR709_422_8_CBYCRY);
+        CHECK(PixelType_Gvsp_YCBCR709_411_8_CBYYCRYY);
+        CHECK(PixelType_Gvsp_RGB8_Planar);
+        CHECK(PixelType_Gvsp_RGB10_Planar);
+        CHECK(PixelType_Gvsp_RGB12_Planar);
+        CHECK(PixelType_Gvsp_RGB16_Planar);
+        CHECK(PixelType_Gvsp_Jpeg);
+        CHECK(PixelType_Gvsp_Coord3D_ABC32f);
+        CHECK(PixelType_Gvsp_Coord3D_ABC32f_Planar);
+        CHECK(PixelType_Gvsp_Coord3D_AC32f);
+        CHECK(PixelType_Gvsp_COORD3D_DEPTH_PLUS_MASK);
+        CHECK(PixelType_Gvsp_Coord3D_ABC32);
+        CHECK(PixelType_Gvsp_Coord3D_AB32f);
+        CHECK(PixelType_Gvsp_Coord3D_AB32);
+        CHECK(PixelType_Gvsp_Coord3D_AC32f_64);
+        CHECK(PixelType_Gvsp_Coord3D_AC32f_Planar);
+        CHECK(PixelType_Gvsp_Coord3D_AC32);
+        CHECK(PixelType_Gvsp_Coord3D_A32f);
+        CHECK(PixelType_Gvsp_Coord3D_A32);
+        CHECK(PixelType_Gvsp_Coord3D_C32f);
+        CHECK(PixelType_Gvsp_Coord3D_C32);
+        CHECK(PixelType_Gvsp_Coord3D_ABC16);
+        CHECK(PixelType_Gvsp_Coord3D_C16);
+        CHECK(PixelType_Gvsp_HB_Mono8);
+        CHECK(PixelType_Gvsp_HB_Mono10);
+        CHECK(PixelType_Gvsp_HB_Mono10_Packed);
+        CHECK(PixelType_Gvsp_HB_Mono12);
+        CHECK(PixelType_Gvsp_HB_Mono12_Packed);
+        CHECK(PixelType_Gvsp_HB_Mono16);
+        CHECK(PixelType_Gvsp_HB_BayerGR8);
+        CHECK(PixelType_Gvsp_HB_BayerRG8);
+        CHECK(PixelType_Gvsp_HB_BayerGB8);
+        CHECK(PixelType_Gvsp_HB_BayerBG8);
+        CHECK(PixelType_Gvsp_HB_BayerRBGG8);
+        CHECK(PixelType_Gvsp_HB_BayerGR10);
+        CHECK(PixelType_Gvsp_HB_BayerRG10);
+        CHECK(PixelType_Gvsp_HB_BayerGB10);
+        CHECK(PixelType_Gvsp_HB_BayerBG10);
+        CHECK(PixelType_Gvsp_HB_BayerGR12);
+        CHECK(PixelType_Gvsp_HB_BayerRG12);
+        CHECK(PixelType_Gvsp_HB_BayerGB12);
+        CHECK(PixelType_Gvsp_HB_BayerBG12);
+        CHECK(PixelType_Gvsp_HB_BayerGR10_Packed);
+        CHECK(PixelType_Gvsp_HB_BayerRG10_Packed);
+        CHECK(PixelType_Gvsp_HB_BayerGB10_Packed);
+        CHECK(PixelType_Gvsp_HB_BayerBG10_Packed);
+        CHECK(PixelType_Gvsp_HB_BayerGR12_Packed);
+        CHECK(PixelType_Gvsp_HB_BayerRG12_Packed);
+        CHECK(PixelType_Gvsp_HB_BayerGB12_Packed);
+        CHECK(PixelType_Gvsp_HB_BayerBG12_Packed);
+        CHECK(PixelType_Gvsp_HB_YUV422_Packed);
+        CHECK(PixelType_Gvsp_HB_YUV422_YUYV_Packed);
+        CHECK(PixelType_Gvsp_HB_RGB8_Packed);
+        CHECK(PixelType_Gvsp_HB_BGR8_Packed);
+        CHECK(PixelType_Gvsp_HB_RGBA8_Packed);
+        CHECK(PixelType_Gvsp_HB_BGRA8_Packed);
+        CHECK(PixelType_Gvsp_HB_RGB16_Packed);
+        CHECK(PixelType_Gvsp_HB_BGR16_Packed);
+        CHECK(PixelType_Gvsp_HB_RGBA16_Packed);
+        CHECK(PixelType_Gvsp_HB_BGRA16_Packed);
+        return "nothing";
     }
 
 private:
