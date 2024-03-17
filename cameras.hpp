@@ -87,7 +87,7 @@ public:
             return this->_cam_hik.start();
         }
         else if (this->_cam_type == "d") {
-            this->_cam_realsense_cfg.enable_stream(RS2_STREAM_COLOR, this->_cam_realsense_frame_width, this->_cam_realsense_frame_height, RS2_FORMAT_BGR8, this->_cam_realsense_frame_fps);
+            this->_cam_realsense_cfg.enable_stream(RS2_STREAM_COLOR, this->_cam_realsense_frame_width, this->_cam_realsense_frame_height, RS2_FORMAT_RGB8, this->_cam_realsense_frame_fps);
             this->_cam_realsense_cfg.enable_stream(RS2_STREAM_DEPTH, this->_cam_realsense_frame_width, this->_cam_realsense_frame_height, RS2_FORMAT_Z16, this->_cam_realsense_frame_fps);
             this->_cam_realsense_pipe.start(this->_cam_realsense_cfg);
             return true;
