@@ -13,7 +13,7 @@ int main() {
         frame = cam.get_frame();
         if (frame.empty())
             continue;
-        cam.draw_mark(300, 300, cameras::MARK_X);
+        // cam.draw_mark(300, 300, cameras::MARK_X);
         cv::imshow("Cam", frame);
         std::cout << "fps: " << cam.get_fps() << std::endl;
         if (cv::waitKey(1) == 27)

@@ -30,6 +30,10 @@ public:
         std::fill_n(this->_intv, sizeof(this->_intv) / sizeof(this->_intv[0]), 0x7f7f7f7f);
         cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_FATAL);                   // 设置opencv打印日志的等级, 不再打印warn信息
         this->_cam_type = "x";
+        //------------------------------设置摄像头基本参数------------------------------
+        this->_cam_realsense_frame_width = 640;
+        this->_cam_realsense_frame_height = 480;
+        this->_cam_realsense_frame_fps = 30;
 
         this->auto_detect_cam();
         this->print_cam_info(this->type_is_useful(this->_cam_type));
@@ -39,6 +43,10 @@ public:
         std::fill_n(this->_intv, sizeof(this->_intv) / sizeof(this->_intv[0]), 0x7f7f7f7f);
         cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_FATAL);                   // 设置opencv打印日志的等级, 不再打印warn信息
         this->_cam_type = "x";
+        //------------------------------设置摄像头基本参数------------------------------
+        this->_cam_realsense_frame_width = 640;
+        this->_cam_realsense_frame_height = 480;
+        this->_cam_realsense_frame_fps = 30;
 
         if (!this->type_is_useful(cam_type)) {
             std::cerr << "param: " << cam_type << " is not useful" << std::endl;
@@ -79,7 +87,9 @@ public:
             return this->_cam_hik.start();
         }
         else if (this->_cam_type == "d") {
-            this->_cam_realsense_pipe.start();                          // TODO: 无法判断是否开启成功
+            this->_cam_realsense_cfg.enable_stream(RS2_STREAM_COLOR, this->_cam_realsense_frame_width, this->_cam_realsense_frame_height, RS2_FORMAT_BGR8, this->_cam_realsense_frame_fps);
+            this->_cam_realsense_cfg.enable_stream(RS2_STREAM_DEPTH, this->_cam_realsense_frame_width, this->_cam_realsense_frame_height, RS2_FORMAT_Z16, this->_cam_realsense_frame_fps);
+            this->_cam_realsense_pipe.start(this->_cam_realsense_cfg);
             return true;
         }
         return false;
@@ -288,6 +298,14 @@ private:
     cv::VideoCapture _cam_industry;                     // 工业摄像头
     rs2::pipeline _cam_realsense_pipe;                  // 深度摄像头的pipeline
     std::string _cam_type;                              // 摄像头的类型: h - hik摄像头; i - 工业摄像头; d - 深度摄像头
+
+    //------------------------------摄像头参数设置------------------------------
+    rs2::config _cam_realsense_cfg;                     // 深度摄像头的设置
+
+    //------------------------------摄像头参数------------------------------
+    int _cam_realsense_frame_width;                     // 深度摄像头帧宽
+    int _cam_realsense_frame_height;                    // 深度摄像头帧高
+    int _cam_realsense_frame_fps;                       // 深度摄像头帧数
 
     //------------------------------数据帧------------------------------
     cv::Mat _frame;                                     // 图片处理后的opencv frame
