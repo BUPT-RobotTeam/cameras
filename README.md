@@ -30,8 +30,8 @@ set(MVCAM_COMMON_PATH /opt/MVS)
 ```text
 1. CAMERAS_CHECK(state, str)
 函数功能: 根据state(bool)来判断是否输出str
-state: True: 输出str, 并且return -1
-       False: 不做任何事
+state: False: 输出str, 并且return -1
+       True: 不做任何事
 
 使用示例:
 CAMERAS_CHECK(cam.open(), "camera open error");
